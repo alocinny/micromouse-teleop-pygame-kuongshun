@@ -1,86 +1,114 @@
-import requests
+import socket
+import threading
+import time
+
 
 class RobotClient:
-    FORWARD = 1
-    RIGHT = 2
-    STOP = 3
-    LEFT = 4
-    BACKWARD = 5
+    """
+    manda comandos em taxa fixa, formato:
 
-    def __init__(self, base_url: str, timeout: float = 0.2):
-        self.base_url = base_url.rstrip("/")
-        self.timeout = timeout
-        self.last_car_command = None
-        self.last_speed = None
-        self.last_flash = None
+        V:<linear>,W:<angular>,F:<flash>
+    """
 
-    def _send_control(self, var: str, value: int) -> bool:
-        url = f"{self.base_url}/control"
-        params = {
-            "var": var,
-            "val": value,
-        }
+    def __init__(
+        self,
+        base_url=None,
+        robot_ip="192.168.4.1",
+        udp_port=4210,
+        send_hz=20,
+    ):
+        self.robot_ip = robot_ip
+        self.udp_port = udp_port
+        self.address = (robot_ip, udp_port)
 
-        try:
-            response = requests.get(
-                url,
-                params=params,
-                timeout=self.timeout,
-            )
-            return response.status_code == 200
-        except requests.RequestException:
-            return False
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def set_car(self, command: int) -> bool:
-        if command == self.last_car_command:
-            return True
+        self.send_period = 1.0 / send_hz
 
-        ok = self._send_control("car", command)
+        self.speed = 180
+        self.flash = 0
 
-        if ok:
-            self.last_car_command = command
+        self.linear = 0
+        self.angular = 0
 
-        return ok
+        self.running = True
+        self.lock = threading.Lock()
+
+        self.thread = threading.Thread(
+            target=self._send_loop,
+            daemon=True,
+        )
+        self.thread.start()
+
+    def _send_loop(self):
+        while self.running:
+            with self.lock:
+                linear = self.linear
+                angular = self.angular
+                flash = self.flash
+
+            message = f"V:{linear},W:{angular},F:{flash}"
+
+            try:
+                self.sock.sendto(message.encode("utf-8"), self.address)
+            except OSError:
+                pass
+
+            time.sleep(self.send_period)
+
+    def _set_motion(self, linear: int, angular: int) -> bool:
+        with self.lock:
+            self.linear = int(max(-255, min(255, linear)))
+            self.angular = int(max(-255, min(255, angular)))
+
+        return True
 
     def set_speed(self, speed: int) -> bool:
-        speed = max(0, min(255, speed))
+        with self.lock:
+            self.speed = int(max(0, min(255, speed)))
 
-        if speed == self.last_speed:
-            return True
-
-        ok = self._send_control("speed", speed)
-
-        if ok:
-            self.last_speed = speed
-
-        return ok
+        return True
 
     def set_flash(self, value: int) -> bool:
-        value = max(0, min(255, value))
+        with self.lock:
+            self.flash = int(max(0, min(255, value)))
 
-        if value == self.last_flash:
-            return True
-
-        ok = self._send_control("flash", value)
-
-        if ok:
-            self.last_flash = value
-
-        return ok
+        return True
 
     def forward(self) -> bool:
-        return self.set_car(self.FORWARD)
+        with self.lock:
+            speed = self.speed
+
+        return self._set_motion(speed, 0)
 
     def backward(self) -> bool:
-        return self.set_car(self.BACKWARD)
+        with self.lock:
+            speed = self.speed
+
+        return self._set_motion(-speed, 0)
 
     def left(self) -> bool:
-        return self.set_car(self.LEFT)
+        with self.lock:
+            speed = self.speed
+
+        return self._set_motion(0, -speed)
 
     def right(self) -> bool:
-        return self.set_car(self.RIGHT)
+        with self.lock:
+            speed = self.speed
+
+        return self._set_motion(0, speed)
 
     def stop(self) -> bool:
-        return self.set_car(self.STOP)
+        return self._set_motion(0, 0)
 
-    
+    def close(self):
+        self.stop()
+        time.sleep(0.05)
+
+        self.running = False
+
+        if self.thread is not None:
+            self.thread.join(timeout=1)
+
+        self.sock.close()
