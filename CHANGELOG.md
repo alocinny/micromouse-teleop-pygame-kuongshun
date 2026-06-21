@@ -7,6 +7,19 @@ O formato segue a ideia de versionamento semântico:
 ```text
 MAJOR.MINOR.PATCH
 ```
+## [0.1.1] - 2026-06-21
+
+### Corrigido
+
+- Atualizada a API LEDC do firmware ESP32-CAM para compatibilidade com Arduino ESP32 Core 3.x.
+- Substituído `ledcSetup` e `ledcAttachPin` por `ledcAttach`.
+- Ajustado `ledcWrite` para usar GPIO em vez de canal.
+
+### Validado
+
+- Firmware compilado e gravado na ESP32-CAM.
+- Aplicação Pygame testada com o robô real.
+- Controle manual, câmera e comandos HTTP validados.
 
 ## [0.1.0] - 2026-06-21
 
