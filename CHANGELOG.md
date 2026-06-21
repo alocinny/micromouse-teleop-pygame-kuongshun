@@ -7,6 +7,35 @@ O formato segue a ideia de versionamento semântico:
 ```text
 MAJOR.MINOR.PATCH
 ```
+
+## [0.2.0] - 2026-06-21
+
+### Adicionado
+
+- Controle do carrinho via UDP.
+- Envio contínuo de comandos em taxa fixa.
+- Modo de controle automático simples por visão computacional.
+- Detecção de alvo por cor usando HSV.
+- Conversão da posição do alvo em comandos de movimento.
+- Leitor MJPEG mais robusto para a câmera ESP32-CAM.
+- Reconexão automática do stream da câmera do carrinho.
+- Watchdog no firmware para parar o robô caso os comandos UDP parem de chegar.
+
+### Alterado
+
+- Substituído o controle HTTP por controle UDP.
+- Reduzida a latência dos comandos de movimentação.
+- Mantida a API HTTP apenas como parte do firmware web original.
+- Melhorada a estabilidade da leitura da câmera do carrinho.
+
+### Validado
+
+- Controle manual via Pygame.
+- Controle por visão usando a câmera do computador.
+- Firmware UDP na ESP32-CAM.
+- Stream da câmera do carrinho em modo best effort.
+- Parada automática do robô em caso de perda de comandos.
+
 ## [0.1.1] - 2026-06-21
 
 ### Corrigido

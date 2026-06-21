@@ -177,10 +177,10 @@ static esp_err_t stream_handler(httpd_req_t *req){
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-        Serial.printf("MJPG: %uB %ums (%.1ffps)\r\n",
-            (uint32_t)(_jpg_buf_len),
-            (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time           
-        );
+        //Serial.printf("MJPG: %uB %ums (%.1ffps)\r\n",
+            //(uint32_t)(_jpg_buf_len),
+            //(uint32_t)frame_time, 1000.0 / (uint32_t)frame_time           
+       // );
     }
 
     last_frame = 0;
