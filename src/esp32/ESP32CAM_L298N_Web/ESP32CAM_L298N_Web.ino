@@ -32,10 +32,10 @@ void initMotors()
   pinMode(ENR, OUTPUT);
   pinMode(ENL, OUTPUT);
 
-  ledcSetup(2,5000,8);
-  ledcSetup(12,5000,8);
-  ledcAttachPin(ENR,2);
-  ledcAttachPin(ENL,12);
+  
+  
+  ledcAttach(ENR, 5000, 8);
+  ledcAttach(ENL, 5000, 8);
   ledcWrite(ENR, 0);
   ledcWrite(ENL, 0);
   digitalWrite(gpLf, LOW);
@@ -57,16 +57,16 @@ void setup()
   // Remote Control Car
   initMotors();
 
-  ledcSetup(7, 5000, 8);
-  ledcAttachPin(gpLed, 7);  //pin4 is LED
+  
+  ledcAttach(gpLed, 5000, 8);  // pin4 is LED
 
   server.begin();
 
   for (int i = 0; i < 5; i++) 
   {
-    ledcWrite(7, 10); // flash led
+    ledcWrite(gpLed, 10); // flash led
     delay(50);
-    ledcWrite(7, 0);
+    ledcWrite(gpLed, 0);
     delay(50);
   }
 }
